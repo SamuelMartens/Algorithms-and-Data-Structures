@@ -24,6 +24,7 @@ public:
 
 	ListNode<T>* Next() { return m_nextElem; };
 	const T& Data() const noexcept { return m_data; };
+	T& Data() noexcept { return m_data; };
 
 	void SetNext(ListNode<T>* nextElem) { m_nextElem = nextElem; };
 	void SetData(const T& data) { m_data = data; };

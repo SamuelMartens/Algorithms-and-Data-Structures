@@ -2,62 +2,47 @@
 
 #include <functional>
 
-#include "AdjacencyLisy.h"
+#include "AdjacencyList.h"
 #include "Queue.h"
 
 namespace TraversalUtils
 {
-	enum class VertexStatus
-	{
-		Undiscovered,
-		Discovered,
-		Processed
-	};
-
-	// VTN - Vertex Traversal Node
 	template<typename T>
-	struct VTN
+	void ProcessVertex(AdjacencyVertex<T>& vertex, Queue<AdjacencyVertex<T>*>& queue, std::function<void(const T&)> ProcessFunc)
 	{
-		VTN() :
-			  m_status(VertexStatus::Undiscovered)
-			, m_vertex(nullptr)
-		{};
+		if (VertexStatus::Processed == vertex.m_status)
+			return;
 
-		VTN(const List<T*>* initNode) :
-			  m_status(VertexStatus::Undiscovered)
-			, m_vertex(initNode)
-		{};
-
-		VertexStatus m_status;
-		const List<T*>* m_vertex;
-	};
-
-	template<typename T>
-	void InitVTNGraph(const AdjacencyList<T>& graph, AdjacencyList<VTN<T>>& newGraph)
-	{
-		for (unsigned i = 0; i < graph.GetVerticeArray().size(); ++i)
+		ListNode<AdjacencyVertex<T>*>* currentNode = vertex.m_edges.Start();
+		while (currentNode)
 		{
-			
+			if(currentNode->Data()->m_status == VertexStatus::Undiscovered)
+			{
+				queue.Push(currentNode->Data());
+				currentNode->Data()->m_status = VertexStatus::Discovered;
+			}
 
+			currentNode = currentNode->Next();
 		}
-	}
 
-	template<typename T>
-	void ProcessVertex(VTN<T>& vertex, Queue<VTN<T>>& queue)
-	{
-		
+		ProcessFunc(vertex.m_data);
+		vertex.m_status = VertexStatus::Processed;
 	}
-
-};
+}
 
 template<typename T>
-void BFS(const AdjacencyList<T>& graph, std::function<void(const T&)> processFunc, const int rootInd = 0)
+void BFS(AdjacencyList<T>& graph, std::function<void(const T&)> ProcessFunc, const int rootInd = 0)
 {
-	if (!graph.GetVerticeArray().size())
+	if (!graph.GetVerticesArray().size())
 		return;
 
-	List<T>* currentVert = graph.GetVerticeArray()[rootInd];
-	Queue<TraversalUtils::VTN<T>> queue;
-
+	Queue<AdjacencyVertex<T>*> queue;
+	TraversalUtils::ProcessVertex(graph.GetVerticesArray()[rootInd], queue, ProcessFunc);
+	
+	while (!queue.IsEmpty())
+	{
+		ListNode<AdjacencyVertex<T>*>* currentVertex = queue.Pop();
+		TraversalUtils::ProcessVertex(*currentVertex->Data(), queue, ProcessFunc);
+	}
 
 }

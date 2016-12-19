@@ -5,18 +5,26 @@
 
 #include "List.h"
 
+enum class VertexStatus
+{
+	Undiscovered,
+	Discovered,
+	Processed
+};
 
 template<typename T>
 struct AdjacencyVertex
 {
 	AdjacencyVertex(const T& newData, unsigned id) :
-			m_data(newData)
+		  m_data(newData)
+		, m_status(VertexStatus::Undiscovered)
 		, m_id(id)
 	{};
 
 	~AdjacencyVertex() = default;
 
 	T m_data;
+	VertexStatus m_status;
 	const unsigned m_id;
 	List<AdjacencyVertex<T>*> m_edges;
 };
@@ -29,20 +37,28 @@ class AdjacencyList
 public:
 
 	AdjacencyList() :
-		currentId(0)
+		m_currentId(0)
 	{};
 
 	~AdjacencyList() = default;
 
 	void AddVertex(const T& newVertex)
 	{
-		m_vertices.push_back(AdjacencyVertex(newVertex, GenerateId()));
+		m_vertices.push_back(AdjacencyVertex<T>(newVertex, GenerateId()));
 	}
 
 	void AddEdge(AV& firstV, AV& secondV)
 	{
 		firstV.m_edges.PushBack(secondV);
 		secondV.m_edges.PushBack(firstV);
+	}
+
+	void AddEdge(int firstVertIndex, int secondVertIndex)
+	{
+		assert(firstVertIndex < m_vertices.size() && secondVertIndex < m_vertices.size());
+
+		m_vertices[firstVertIndex].m_edges.PushBack(&m_vertices[secondVertIndex]);
+		m_vertices[secondVertIndex].m_edges.PushBack(&m_vertices[firstVertIndex]);
 	}
 
 	void RemoveEdge(AV& firstV, AV& secondV, bool removeOnlySecond = false)
@@ -74,6 +90,7 @@ public:
 	int GetVertexDegree(const AV& vertex) const { return vertex.m_edges.Size(); };
 
 	const std::vector<AdjacencyVertex<T>>&  GetVerticesArray() const { return m_vertices; };
+	std::vector<AdjacencyVertex<T>>&  GetVerticesArray() { return m_vertices; };
 
 private:
 
