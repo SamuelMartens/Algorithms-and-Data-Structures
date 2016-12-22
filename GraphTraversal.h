@@ -8,7 +8,7 @@
 namespace TraversalUtils
 {
 	template<typename T>
-	void ProcessVertex(AdjacencyVertex<T>& vertex, Queue<AdjacencyVertex<T>*>& queue, std::function<void(const T&)> ProcessFunc)
+	void ProcessVertexBFS(AdjacencyVertex<T>& vertex, Queue<AdjacencyVertex<T>*>& queue, std::function<void(const T&)> ProcessFunc)
 	{
 		if (VertexStatus::Processed == vertex.m_status)
 			return;
@@ -28,6 +28,31 @@ namespace TraversalUtils
 		ProcessFunc(vertex.m_data);
 		vertex.m_status = VertexStatus::Processed;
 	}
+
+
+	template<typename T>
+	void ProcessVertexDFS(AdjacencyVertex<T>& vertex, std::function<void(const T&)> ProcessFunc)
+	{
+		if (VertexStatus::Processed == vertex.m_status)
+			return;
+
+		vertex.m_status = VertexStatus::Discovered;
+
+		ListNode<AdjacencyVertex<T>*>* currentNode = vertex.m_edges.Start();
+		while (currentNode)
+		{
+			if(currentNode->Data()->m_status == VertexStatus::Undiscovered)
+			{
+				//currentNode->Data()->m_status = VertexStatus::Discovered;
+				ProcessVertexDFS(*currentNode->Data(), ProcessFunc);
+			}
+
+			currentNode = currentNode->Next();
+		}
+
+		ProcessFunc(vertex.m_data);
+		vertex.m_status = VertexStatus::Processed;
+	}
 }
 
 template<typename T>
@@ -37,12 +62,22 @@ void BFS(AdjacencyList<T>& graph, std::function<void(const T&)> ProcessFunc, con
 		return;
 
 	Queue<AdjacencyVertex<T>*> queue;
-	TraversalUtils::ProcessVertex(graph.GetVerticesArray()[rootInd], queue, ProcessFunc);
+	TraversalUtils::ProcessVertexBFS(graph.GetVerticesArray()[rootInd], queue, ProcessFunc);
 	
 	while (!queue.IsEmpty())
 	{
 		ListNode<AdjacencyVertex<T>*>* currentVertex = queue.Pop();
-		TraversalUtils::ProcessVertex(*currentVertex->Data(), queue, ProcessFunc);
+		TraversalUtils::ProcessVertexBFS(*currentVertex->Data(), queue, ProcessFunc);
 	}
+
+}
+
+template<typename T>
+void DFS(AdjacencyList<T>& graph, std::function<void(const T&)> ProcessFunc, const int rootInd = 0)
+{
+	if (!graph.GetVerticesArray().size())
+		return;
+
+	TraversalUtils::ProcessVertexDFS(graph.GetVerticesArray()[rootInd], ProcessFunc);
 
 }
