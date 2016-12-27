@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <cassert>
+#include <iterator>
 
 #include "List.h"
 
@@ -19,6 +20,7 @@ struct AdjacencyVertex
 		  m_data(newData)
 		, m_status(VertexStatus::Undiscovered)
 		, m_id(id)
+
 	{};
 
 	~AdjacencyVertex() = default;
@@ -26,6 +28,8 @@ struct AdjacencyVertex
 	T m_data;
 	VertexStatus m_status;
 	const unsigned m_id;
+	// Weight can't be less then 0
+	std::vector<unsigned> m_edgesWeight;
 	List<AdjacencyVertex<T>*> m_edges;
 };
 
@@ -42,23 +46,50 @@ public:
 
 	~AdjacencyList() = default;
 
+	int GetIndex(const AdjacencyVertex<T>* vert) const { return std::distance(m_vertices.data(), vert); };
+
+	void UndiscoverAll()
+	{
+		for (unsigned i = 0; i < m_vertices.size(); ++i)
+		{
+			m_vertices[i].m_status = VertexStatus::Undiscovered;
+		}
+	}
+
+	unsigned NumEdges() const
+	{
+		unsigned edgesNumSum = 0;
+		for (unsigned i = 0; i < m_vertices.size(); ++i)
+		{
+			edgesNumSum += m_vertices[i].m_edges.Size()
+		}
+
+		return edgesNumSum;
+	}
+
 	void AddVertex(const T& newVertex)
 	{
 		m_vertices.push_back(AdjacencyVertex<T>(newVertex, GenerateId()));
 	}
 
-	void AddEdge(AV& firstV, AV& secondV)
+	void AddEdge(AV& firstV, AV& secondV, unsigned edgeWeight = 0)
 	{
 		firstV.m_edges.PushBack(secondV);
+		firstV.m_edgesWeight.push_back(edgeWeight);
+
 		secondV.m_edges.PushBack(firstV);
+		secondV.m_edgesWeight.push_back(edgeWeight);
 	}
 
-	void AddEdge(int firstVertIndex, int secondVertIndex)
+	void AddEdge(int firstVertIndex, int secondVertIndex, unsigned edgeWeight = 0)
 	{
 		assert(firstVertIndex < m_vertices.size() && secondVertIndex < m_vertices.size());
 
 		m_vertices[firstVertIndex].m_edges.PushBack(&m_vertices[secondVertIndex]);
+		m_vertices[firstVertIndex].m_edgesWeight.push_back(edgeWeight);
+
 		m_vertices[secondVertIndex].m_edges.PushBack(&m_vertices[firstVertIndex]);
+		m_vertices[secondVertIndex].m_edgesWeight.push_back(edgeWeight);
 	}
 
 	void RemoveEdge(AV& firstV, AV& secondV, bool removeOnlySecond = false)
